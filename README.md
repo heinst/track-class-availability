@@ -9,7 +9,7 @@ Anyone can help out with this, I wanted to do this myself but I don't have much 
 
 ##In work
 
-- [ ] Track multiple classes @heinst
+- [ ] Track multiple classes (heinst)
 
 ##To-Do
 	
