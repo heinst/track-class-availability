@@ -7,7 +7,7 @@ Track Class Availability (trackClassAvailability.py) is a tool written in Python
 
 ##To-Do
 
-  1.Track multiple classes (Priority and an easy fix)
+  	1.Track multiple classes (Priority and an easy fix)
 	2. Check if the program works with the major e-mail providers, currently only tested with gmail.
 	3. Go through and add features that are on the `Planned Features` list
 
