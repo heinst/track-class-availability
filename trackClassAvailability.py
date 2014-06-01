@@ -10,6 +10,8 @@ import schedule
 #(a list of all the classes and then in each sub-list is all the class information).
 
 def load_class_information():
+    # Determines if there was a failure in opening the file
+   
     try:
         classes = open('ClassesToTrack.txt', 'r')
     except:
@@ -17,11 +19,21 @@ def load_class_information():
         url = str(raw_input('Please enter the URL to the direct section you want to track on WebTMS: '))
         opensOrCloses = str(raw_input('Would you like to be notified when a section Opens or Closes (Enter opens or closes): '))
         stringToWrite = url +',' + opensOrCloses
+
+        if not url and not openOrCloses:
+            print('Please provide valid input or re-run the script')
+
         classes = open('ClassesToTrack.txt', 'w')
         classes.write(stringToWrite)
         classes.close()
-        print('Please re-run the script.')
+        
+        # We know the file had just been created, so open it instead of forcing the user to re-run
+        classes = open('ClassesToTrack.txt', 'r')
+   
+    if not classes:
+        print "There are no classes to track. Please add classes then re-run the script"
         sys.exit(0)
+        
     classesToTrack = []
     for l in classes:
         temp = []
@@ -50,6 +62,9 @@ def main():
         print('Couldn\'t connect to URL.')
     data = str(urlData.readlines())
     bs = BeautifulSoup(data)
+    
+    # These variables are still in scope even though they are set in the
+    # for loop
     for t in bs.findAll('td', attrs={'class': 'tableHeader'}):
         if t.text == "CRN":
             crn = t.findNext('td').text
