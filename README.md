@@ -9,12 +9,11 @@ Anyone can help out with this, I wanted to do this myself but I don't have much 
 
 ##In work
 
-- [ ] Track multiple classes (heinst)
 
 ##To-Do
 	
 - [ ] Delete the class or handle the class in such a way so that multiple emails aren't sent about the same class status. As of now if a class opens or closes, it doesn't delete the class from the txt file, so it will send an email about the class even after it opens or closes. 
-- [ ] Check if the program works with the major e-mail providers, currently only tested with gmail.
+
 - [ ] Go through and add features that are on the `Planned Features` list
 
 ##Planned Features
@@ -25,6 +24,8 @@ Anyone can help out with this, I wanted to do this myself but I don't have much 
 
 ##Finished
 
+- [x] Check if the program works with the major e-mail providers, currently only tested with gmail. (only works with drexel email or gmail.)
+- [x] Track multiple classes (heinst)
 - [x] When the program doesn't find the txt file, it creates one, it then quits. A nice feature is that if it created the file, then read the newly created file instead of quiting. (Thanks, hassanNS!)
 - [x] Sends email if class is opened or closed.
 - [x] Can read from text file and get information needed to check the status of the class	
