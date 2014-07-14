@@ -9,10 +9,9 @@ Anyone can help out with this, I wanted to do this myself but I don't have much 
 
 ##In work
 
+- [x] Delete the class or handle the class in such a way so that multiple emails aren't sent about the same class status. As of now if a class opens or closes, it doesn't delete the class from the txt file, so it will send an email about the class even after it opens or closes. 
 
 ##To-Do
-	
-- [ ] Delete the class or handle the class in such a way so that multiple emails aren't sent about the same class status. As of now if a class opens or closes, it doesn't delete the class from the txt file, so it will send an email about the class even after it opens or closes. 
 
 - [ ] Go through and add features that are on the `Planned Features` list
 
