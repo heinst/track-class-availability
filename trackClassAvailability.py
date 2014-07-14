@@ -17,10 +17,33 @@ def load_class_information():
     except:
         print('ClassesToTrack.txt not found or hasn\'t been created.')
         url = str(raw_input('Please enter the URL to the direct section you want to track on WebTMS: '))
-        opensOrCloses = str(raw_input('Would you like to be notified when a section Opens or Closes (Enter opens or closes): '))
-        stringToWrite = url +',' + opensOrCloses
+        if 'webtms' not in url:
+            while True:
+                url = str(raw_input('Please enter the URL to the direct section you want to track on WebTMS: '))
+                if 'webtms' in url:
+                    break
 
-        if not url and not openOrCloses:
+        opensOrCloses = str(raw_input('Would you like to be notified when a section Opens or Closes (Enter opens or closes): '))
+        if opensOrCloses.lower() != 'opens':
+            if opensOrCloses.lower() != 'closes':
+                while True:
+                    opensOrCloses = str(raw_input('Would you like to be notified when a section Opens or Closes (Enter opens or closes): '))
+                    if opensOrCloses.lower() == 'opens' or opensOrCloses.lower() == 'closes':
+                        break
+
+        email = str(raw_input('Enter an @drexel.edu or @gmail.com email address: '))
+        if '@gmail.com' in email.lower():
+            if '@drexel.edu' in email.lower():
+                while True:
+                    email = str(raw_input('Enter an @drexel.edu or @gmail.com email address: '))
+                    if '@gmail.com' in email.lower() or '@drexel.edu' in email.lower():
+                        break
+
+        password = str(raw_input('Enter the password for {0}: '.format(email)))
+
+        stringToWrite = url +',' + opensOrCloses + ',' + email + ',' + password
+
+        if not url and not opensOrCloses:
             print('Please provide valid input or re-run the script')
 
         classes = open('ClassesToTrack.txt', 'w')
@@ -40,8 +63,12 @@ def load_class_information():
         splitLine = l.split(',')
         url = splitLine[0]
         avail = splitLine[1]
+        email = splitLine[2]
+        password = splitLine[3]
         temp.append(url)
         temp.append(avail)
+        temp.append(email)
+        temp.append(password)
         classesToTrack.append(temp)
     return classesToTrack
 
@@ -54,63 +81,115 @@ def load_class_information():
 
 def main():
     classes = load_class_information()
-    url = classes[0][0]
-    closeOrOpen = classes[0][1]
-    try:
-        urlData = urllib.urlopen(url)
-    except:
-        print('Couldn\'t connect to URL.')
-    data = str(urlData.readlines())
-    bs = BeautifulSoup(data)
+    for i in range(0, len(classes)):
+        url = classes[i][0]
+        closeOrOpen = classes[i][1]
+        email = classes[i][2]
+        password = classes[i][3]
+        try:
+            urlData = urllib.urlopen(url)
+        except:
+            print('Couldn\'t connect to URL.')
+        data = str(urlData.readlines())
+        bs = BeautifulSoup(data)
     
-    # These variables are still in scope even though they are set in the
-    # for loop
-    for t in bs.findAll('td', attrs={'class': 'tableHeader'}):
-        if t.text == "CRN":
-            crn = t.findNext('td').text
-        if t.text == "Subject Code":
-            subj = t.findNext('td').text
-        if t.text == "Course Number":
-            courseNum = t.findNext('td').text
-        if t.text == "Section":
-            section = t.findNext('td').text
-        if t.text == "Credits":
-            credits = t.findNext('td').text
-        if t.text == "Title":
-            title = t.findNext('td').text
-        if t.text == "Instructor(s)":
-            instructor = t.findNext('td').text
-        if t.text == "Max Enroll":
-            maxEnrollNum = t.findNext('td').text
-        if t.text == "Enroll":
-            curEnrollNum = t.findNext('td').text
-        if t.text == "Section Comments":
-            sectionComments = t.findNext('td').findNext('table').findNext('tr').findNext('td').text
+        # These variables are still in scope even though they are set in the
+        # for loop
+        for t in bs.findAll('td', attrs={'class': 'tableHeader'}):
+            if t.text == "CRN":
+                crn = t.findNext('td').text
+            if t.text == "Subject Code":
+                subj = t.findNext('td').text
+            if t.text == "Course Number":
+                courseNum = t.findNext('td').text
+            if t.text == "Section":
+                section = t.findNext('td').text
+            if t.text == "Credits":
+                credits = t.findNext('td').text
+            if t.text == "Title":
+                title = t.findNext('td').text
+            if t.text == "Instructor(s)":
+                instructor = t.findNext('td').text
+            if t.text == "Max Enroll":
+                maxEnrollNum = t.findNext('td').text
+            if t.text == "Enroll":
+                curEnrollNum = t.findNext('td').text
+            if t.text == "Section Comments":
+                sectionComments = t.findNext('td').findNext('table').findNext('tr').findNext('td').text
 
 
-    urlData.close()
+        urlData.close()
+        if '@gmail.com' in email.lower():
 
-    if (curEnrollNum == 'CLOSED' and closeOrOpen == 'closes'):
-        server = smtplib.SMTP('smtp.gmail.com:587')
-        server.ehlo()
-        server.starttls()
-        server.login("user@gmail.com", "password")
-        subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' closed!'
-        text = 'CRN:\t\t\t%s\nSubject Code:\t\t\t%s\nCourse Number:\t\t\t%s\nSection:\t\t\t%s\nCredits:\t\t\t%s\nTitle:\t\t\t%s\nInstructor(s):\t\t\t%s\nMax Enroll:\t\t\t%s\nEnroll:\t\t\t%s\nSection Comments:\t\t\t%s\n' % (crn, subj, courseNum, section, credits, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
-        message = 'Subject: %s\n\n%s' % (subject, text)
-        server.sendmail("from@gmail.com", "to@gmail.com", message)
-        server.close()
+            if (curEnrollNum == 'CLOSED' and closeOrOpen == 'closes'):
 
-    if (curEnrollNum != 'CLOSED' and closeOrOpen == 'opens'):
-        server = smtplib.SMTP('smtp.gmail.com:587')
-        server.ehlo()
-        server.starttls()
-        server.login("user@gmail.com", "password")
-        subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' opened!'
-        text = 'CRN:\t\t\t%s\nSubject Code:\t\t\t%s\nCourse Number:\t\t\t%s\nSection:\t\t\t%s\nCredits:\t\t\t%s\nTitle:\t\t\t%s\nInstructor(s):\t\t\t%s\nMax Enroll:\t\t\t%s\nEnroll:\t\t\t%s\nSection Comments:\t\t\t%s\n' % (crn, subj, courseNum, section, credits, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
-        message = 'Subject: %s\n\n%s' % (subject, text)
-        server.sendmail("from@gmail.com", "to@gmail.com", message)
-        server.close()
+                server = smtplib.SMTP('smtp.gmail.com:587')
+                server.ehlo()
+                server.starttls()
+                password = password.strip('\n\t')
+                try:
+                    server.login(email, password)
+                except:
+                    print 'Invalid login information, please check the password and email for {0}.'.format(email)
+                    break
+                subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' closed!'
+                text = 'CRN:\t\t\t%s\nSubject Code:\t\t%s\nCourse Number:\t\t%s\nSection:\t\t\t%s\nCredits:\t\t%s\nTitle:\t\t\t%s\nInstructor(s):\t\t%s\nMax Enroll:\t\t\t%s\nEnroll:\t\t\t\t%s\nSection Comments:\t%s\n' % (crn, subj, courseNum, section, credits, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
+                message = 'Subject: %s\n\n%s' % (subject, text)
+                server.sendmail(email, email, message)
+                server.close()
+
+            if (curEnrollNum != 'CLOSED' and closeOrOpen == 'opens'):
+                server = smtplib.SMTP('smtp.gmail.com:587')
+                server.ehlo()
+                server.starttls()
+                password = password.strip('\n\t')
+                try:
+                    server.login(email, password)
+                except:
+                    print 'Invalid login information, please check the password and email for {0}.'.format(email)
+                    break
+                subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' opened!'
+                text = 'CRN:\t\t\t%s\nSubject Code:\t\t%s\nCourse Number:\t\t%s\nSection:\t\t\t%s\nCredits:\t\t%s\nTitle:\t\t\t%s\nInstructor(s):\t\t%s\nMax Enroll:\t\t\t%s\nEnroll:\t\t\t\t%s\nSection Comments:\t%s\n' % (crn, subj, courseNum, section, credits, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
+                message = 'Subject: %s\n\n%s' % (subject, text)
+                server.sendmail(email, email, message)
+                server.close()
+
+        if '@drexel.edu' in email.lower():
+            curEnrollNum = 'CLOSED'
+            closeOrOpen = 'closes'
+            if (curEnrollNum == 'CLOSED' and closeOrOpen == 'closes'):
+
+                server = smtplib.SMTP('smtp.mail.drexel.edu:587')
+                server.ehlo()
+                server.starttls()
+                password = password.strip('\n\t')
+                try:
+                    server.login(email, password)
+                except:
+                    print 'Invalid login information, please check the password and email for {0}.'.format(email)
+                    break
+                subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' closed!'
+                text = 'CRN:\t\t\t%s\nSubject Code:\t\t%s\nCourse Number:\t\t%s\nSection:\t\t\t%s\nCredits:\t\t%s\nTitle:\t\t\t%s\nInstructor(s):\t\t%s\nMax Enroll:\t\t\t%s\nEnroll:\t\t\t\t%s\nSection Comments:\t%s\n' % (crn, subj, courseNum, section, credits, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
+                message = 'Subject: %s\n\n%s' % (subject, text)
+                server.sendmail(email, email, message)
+                server.close()
+
+            if (curEnrollNum != 'CLOSED' and closeOrOpen == 'opens'):
+                server = smtplib.SMTP('smtp.mail.drexel.edu:587')
+                server.ehlo()
+                server.starttls()
+                password = password.strip('\n\t')
+                try:
+                    server.login(email, password)
+                except:
+                    print 'Invalid login information, please check the password and email for {0}.'.format(email)
+                    break
+                subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' opened!'
+                text = 'CRN:\t\t\t%s\nSubject Code:\t\t%s\nCourse Number:\t\t%s\nSection:\t\t\t%s\nCredits:\t\t%s\nTitle:\t\t\t%s\nInstructor(s):\t\t%s\nMax Enroll:\t\t\t%s\nEnroll:\t\t\t\t%s\nSection Comments:\t%s\n' % (crn, subj, courseNum, section, credits, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
+                message = 'Subject: %s\n\n%s' % (subject, text)
+                server.sendmail(email, email, message)
+                server.close()
+
 main()
 
 #The main could be run on a cron job (Linux and Mac OS X), on a Windows built in timer or on a 
