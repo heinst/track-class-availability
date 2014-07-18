@@ -2,6 +2,8 @@ import urllib
 from bs4 import BeautifulSoup
 import smtplib
 import sys
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import schedule
 
 #This loads the class information from the text file. If it can't open the ClassesToTrack.txt,
@@ -77,7 +79,6 @@ def load_class_information():
         classesToTrack.append(temp)
     return classesToTrack
 
-
 def stop_tracking_classes(classesToStopTracking):
     classesToTrack = open('ClassesToTrack.txt', 'r')
     trackedClasses = classesToTrack.readlines()
@@ -103,6 +104,7 @@ def stop_tracking_classes(classesToStopTracking):
                 classesToTrack.write(newTrackedList[i])
             else:
                 classesToTrack.write(newTrackedList[i] + '\n')
+
 
 
 #This main scrapes the html for all the information you could ever dream of having about the class.
@@ -137,7 +139,7 @@ def main():
             if t.text == "Section":
                 section = t.findNext('td').text
             if t.text == "Credits":
-                credits = t.findNext('td').text
+                creds = t.findNext('td').text
             if t.text == "Title":
                 title = t.findNext('td').text
             if t.text == "Instructor(s)":
@@ -148,7 +150,6 @@ def main():
                 curEnrollNum = t.findNext('td').text
             if t.text == "Section Comments":
                 sectionComments = t.findNext('td').findNext('table').findNext('tr').findNext('td').text
-
 
         urlData.close()
 
@@ -166,9 +167,75 @@ def main():
                     print 'Invalid login information, please check the password and email for {0}.'.format(email)
                     break
                 subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' closed!'
-                text = 'CRN:\t\t\t%s\nSubject Code:\t\t%s\nCourse Number:\t\t%s\nSection:\t\t\t%s\nCredits:\t\t%s\nTitle:\t\t\t%s\nInstructor(s):\t\t%s\nMax Enroll:\t\t\t%s\nEnroll:\t\t\t\t%s\nSection Comments:\t%s\n' % (crn, subj, courseNum, section, credits, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
-                message = 'Subject: %s\n\n%s' % (subject, text)
-                server.sendmail(email, email, message)
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From'] = email
+                msg['To'] = email
+
+                html = '<html>'\
+                    '<style>'\
+                        'table' \
+                        '{' \
+                            'border-collapse'
+                html = html + ': '
+                html = html + 'collapse;'
+                html = html + '}' \
+                        'table,th,td' \
+                        '{'
+                html = html + 'border'
+                html = html + ': '
+                html = html + '1px solid black;'
+                html = html + '}'
+
+                html = html + '</style>' \
+                    '<body>' \
+                        '<table>'\
+                            '<tr>'\
+                                '<th align="left">CRN</th>'\
+                                '<td align="left">{0}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Subject Code</th>'\
+                                '<td align="left">{1}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Course Number</th>'\
+                                '<td align="left">{2}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Section</th>'\
+                                '<td align="left">{3}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Credits</th>'\
+                                '<td align="left">{4}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Title</th>'\
+                                '<td align="left">{5}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Instructor(s)</th>'\
+                                '<td align="left">{6}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Max Enroll</th>'\
+                                '<td align="left">{7}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Enroll</th>'\
+                                '<td align="left">{8}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Section Comments</th>'\
+                                '<td align="left">{9}</td>'\
+                            '</tr>'\
+                        '</table>'\
+                     '</body>' \
+                    '</html>'.format(crn, subj, courseNum, section, creds, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
+                part2 = MIMEText(html, 'html')
+                msg.attach(part2)
+                server.sendmail(email, email, msg.as_string())
                 server.close()
                 classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
 
@@ -183,9 +250,75 @@ def main():
                     print 'Invalid login information, please check the password and email for {0}.'.format(email)
                     break
                 subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' opened!'
-                text = 'CRN:\t\t\t%s\nSubject Code:\t\t%s\nCourse Number:\t\t%s\nSection:\t\t\t%s\nCredits:\t\t%s\nTitle:\t\t\t%s\nInstructor(s):\t\t%s\nMax Enroll:\t\t\t%s\nEnroll:\t\t\t\t%s\nSection Comments:\t%s\n' % (crn, subj, courseNum, section, credits, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
-                message = 'Subject: %s\n\n%s' % (subject, text)
-                server.sendmail(email, email, message)
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From'] = email
+                msg['To'] = email
+
+                html = '<html>'\
+                    '<style>'\
+                        'table' \
+                        '{' \
+                            'border-collapse'
+                html = html + ': '
+                html = html + 'collapse;'
+                html = html + '}' \
+                        'table,th,td' \
+                        '{'
+                html = html + 'border'
+                html = html + ': '
+                html = html + '1px solid black;'
+                html = html + '}'
+
+                html = html + '</style>' \
+                    '<body>' \
+                        '<table>'\
+                            '<tr>'\
+                                '<th align="left">CRN</th>'\
+                                '<td align="left">{0}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Subject Code</th>'\
+                                '<td align="left">{1}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Course Number</th>'\
+                                '<td align="left">{2}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Section</th>'\
+                                '<td align="left">{3}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Credits</th>'\
+                                '<td align="left">{4}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Title</th>'\
+                                '<td align="left">{5}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Instructor(s)</th>'\
+                                '<td align="left">{6}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Max Enroll</th>'\
+                                '<td align="left">{7}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Enroll</th>'\
+                                '<td align="left">{8}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Section Comments</th>'\
+                                '<td align="left">{9}</td>'\
+                            '</tr>'\
+                        '</table>'\
+                     '</body>' \
+                    '</html>'.format(crn, subj, courseNum, section, creds, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
+                part2 = MIMEText(html, 'html')
+                msg.attach(part2)
+                server.sendmail(email, email, msg.as_string())
                 server.close()
                 classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
 
@@ -202,12 +335,78 @@ def main():
                     print 'Invalid login information, please check the password and email for {0}.'.format(email)
                     break
                 subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' closed!'
-                text = 'CRN:\t\t\t%s\nSubject Code:\t\t%s\nCourse Number:\t\t%s\nSection:\t\t\t%s\nCredits:\t\t%s\nTitle:\t\t\t%s\nInstructor(s):\t\t%s\nMax Enroll:\t\t\t%s\nEnroll:\t\t\t\t%s\nSection Comments:\t%s\n' % (crn, subj, courseNum, section, credits, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
-                message = 'Subject: %s\n\n%s' % (subject, text)
-                server.sendmail(email, email, message)
+
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From'] = email
+                msg['To'] = email
+
+                html = '<html>'\
+                    '<style>'\
+                        'table' \
+                        '{' \
+                            'border-collapse'
+                html = html + ': '
+                html = html + 'collapse;'
+                html = html + '}' \
+                        'table,th,td' \
+                        '{'
+                html = html + 'border'
+                html = html + ': '
+                html = html + '1px solid black;'
+                html = html + '}'
+
+                html = html + '</style>' \
+                    '<body>' \
+                        '<table>'\
+                            '<tr>'\
+                                '<th align="left">CRN</th>'\
+                                '<td align="left">{0}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Subject Code</th>'\
+                                '<td align="left">{1}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Course Number</th>'\
+                                '<td align="left">{2}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Section</th>'\
+                                '<td align="left">{3}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Credits</th>'\
+                                '<td align="left">{4}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Title</th>'\
+                                '<td align="left">{5}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Instructor(s)</th>'\
+                                '<td align="left">{6}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Max Enroll</th>'\
+                                '<td align="left">{7}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Enroll</th>'\
+                                '<td align="left">{8}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Section Comments</th>'\
+                                '<td align="left">{9}</td>'\
+                            '</tr>'\
+                        '</table>'\
+                     '</body>' \
+                    '</html>'.format(crn, subj, courseNum, section, creds, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
+                part2 = MIMEText(html, 'html')
+                msg.attach(part2)
+                server.sendmail(email, email, msg.as_string())
                 server.close()
                 classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
-
             if (curEnrollNum != 'CLOSED' and closeOrOpen == 'opens'):
                 server = smtplib.SMTP('smtp.mail.drexel.edu:587')
                 server.ehlo()
@@ -219,9 +418,75 @@ def main():
                     print 'Invalid login information, please check the password and email for {0}.'.format(email)
                     break
                 subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' opened!'
-                text = 'CRN:\t\t\t%s\nSubject Code:\t\t%s\nCourse Number:\t\t%s\nSection:\t\t\t%s\nCredits:\t\t%s\nTitle:\t\t\t%s\nInstructor(s):\t\t%s\nMax Enroll:\t\t\t%s\nEnroll:\t\t\t\t%s\nSection Comments:\t%s\n' % (crn, subj, courseNum, section, credits, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
-                message = 'Subject: %s\n\n%s' % (subject, text)
-                server.sendmail(email, email, message)
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From'] = email
+                msg['To'] = email
+
+                html = '<html>'\
+                    '<style>'\
+                        'table' \
+                        '{' \
+                            'border-collapse'
+                html = html + ': '
+                html = html + 'collapse;'
+                html = html + '}' \
+                        'table,th,td' \
+                        '{'
+                html = html + 'border'
+                html = html + ': '
+                html = html + '1px solid black;'
+                html = html + '}'
+
+                html = html + '</style>' \
+                    '<body>' \
+                        '<table>'\
+                            '<tr>'\
+                                '<th align="left">CRN</th>'\
+                                '<td align="left">{0}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Subject Code</th>'\
+                                '<td align="left">{1}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Course Number</th>'\
+                                '<td align="left">{2}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Section</th>'\
+                                '<td align="left">{3}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Credits</th>'\
+                                '<td align="left">{4}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Title</th>'\
+                                '<td align="left">{5}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Instructor(s)</th>'\
+                                '<td align="left">{6}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Max Enroll</th>'\
+                                '<td align="left">{7}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Enroll</th>'\
+                                '<td align="left">{8}</td>'\
+                            '</tr>'\
+                            '<tr>'\
+                                '<th align="left">Section Comments</th>'\
+                                '<td align="left">{9}</td>'\
+                            '</tr>'\
+                        '</table>'\
+                     '</body>' \
+                    '</html>'.format(crn, subj, courseNum, section, creds, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
+                part2 = MIMEText(html, 'html')
+                msg.attach(part2)
+                server.sendmail(email, email, msg.as_string())
                 server.close()
                 classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
 
