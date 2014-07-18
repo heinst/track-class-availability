@@ -61,10 +61,15 @@ def load_class_information():
     for l in classes:
         temp = []
         splitLine = l.split(',')
-        url = splitLine[0]
-        avail = splitLine[1]
-        email = splitLine[2]
-        password = splitLine[3]
+        try:
+            url = splitLine[0]
+            avail = splitLine[1]
+            email = splitLine[2]
+            password = splitLine[3]
+        except:
+            print 'Error getting necessary data from ClassesToTrack.txt.'
+            print 'Make sure all lines are in the correct format: url,closes,email,password or url,opens,email,password'
+            sys.exit(1)
         temp.append(url)
         temp.append(avail)
         temp.append(email)
@@ -72,15 +77,42 @@ def load_class_information():
         classesToTrack.append(temp)
     return classesToTrack
 
+
+def stop_tracking_classes(classesToStopTracking):
+    classesToTrack = open('ClassesToTrack.txt', 'r')
+    trackedClasses = classesToTrack.readlines()
+    classesToTrack.close()
+    classesToTrack = open('ClassesToTrack.txt', 'w')
+    newTrackedList = []
+    for c in trackedClasses:
+        newTrackedList.append(c)
+
+    for i in range(0, len(trackedClasses)):
+        for j in range(0, len(classesToStopTracking)):
+            if trackedClasses[i] == classesToStopTracking[j]:
+                newTrackedList.remove(classesToStopTracking[j])
+            elif trackedClasses[i] == classesToStopTracking[j].strip('\n'):
+                newTrackedList.remove(classesToStopTracking[j].strip('\n'))
+
+    for i in range(0, len(newTrackedList)):
+        if i == len(newTrackedList) - 1:
+            c = newTrackedList[i].strip('\n')
+            classesToTrack.write(c)
+        else:
+            if '\n' in newTrackedList[i]:
+                classesToTrack.write(newTrackedList[i])
+            else:
+                classesToTrack.write(newTrackedList[i] + '\n')
+
+
 #This main scrapes the html for all the information you could ever dream of having about the class.
 #More can be added, although I don't think there is anymore information. This then checks the status
 #of the class and will then send an email with all the information it just gathered. The email will
 #tell the user if the class is opened or closed.
 
-#THIS METHOD SHOULD BE BROKEN UP MORE!
-
 def main():
     classes = load_class_information()
+    classesToStopTracking = []
     for i in range(0, len(classes)):
         url = classes[i][0]
         closeOrOpen = classes[i][1]
@@ -119,6 +151,7 @@ def main():
 
 
         urlData.close()
+
         if '@gmail.com' in email.lower():
 
             if (curEnrollNum == 'CLOSED' and closeOrOpen == 'closes'):
@@ -137,6 +170,7 @@ def main():
                 message = 'Subject: %s\n\n%s' % (subject, text)
                 server.sendmail(email, email, message)
                 server.close()
+                classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
 
             if (curEnrollNum != 'CLOSED' and closeOrOpen == 'opens'):
                 server = smtplib.SMTP('smtp.gmail.com:587')
@@ -153,10 +187,9 @@ def main():
                 message = 'Subject: %s\n\n%s' % (subject, text)
                 server.sendmail(email, email, message)
                 server.close()
+                classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
 
         if '@drexel.edu' in email.lower():
-            curEnrollNum = 'CLOSED'
-            closeOrOpen = 'closes'
             if (curEnrollNum == 'CLOSED' and closeOrOpen == 'closes'):
 
                 server = smtplib.SMTP('smtp.mail.drexel.edu:587')
@@ -173,6 +206,7 @@ def main():
                 message = 'Subject: %s\n\n%s' % (subject, text)
                 server.sendmail(email, email, message)
                 server.close()
+                classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
 
             if (curEnrollNum != 'CLOSED' and closeOrOpen == 'opens'):
                 server = smtplib.SMTP('smtp.mail.drexel.edu:587')
@@ -189,6 +223,9 @@ def main():
                 message = 'Subject: %s\n\n%s' % (subject, text)
                 server.sendmail(email, email, message)
                 server.close()
+                classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
+
+    stop_tracking_classes(classesToStopTracking)
 
 main()
 
