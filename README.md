@@ -5,7 +5,7 @@ Track Class Availability (trackClassAvailability.py) is a tool written in Python
 
 The subject of the aforementioned email will look something like:
 
-![An example of a subject](https://www.dropbox.com/s/m81za7kgp3r5s2e/Screen%20Shot%202014-07-18%20at%207.54.33%20PM.png)
+![An example of a subject](/readme-images/subject.png)
 
 ##Note
 
