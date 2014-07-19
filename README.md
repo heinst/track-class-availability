@@ -7,6 +7,10 @@ The subject of the aforementioned email will look something like:
 
 ![An example of a subject](/readme-images/subject.png)
 
+The body of the aforementioned email will look something like:
+
+![An example of a body](/readme-images/body.png)
+
 ##Note
 
 Anyone can help out with this, I wanted to do this myself but I don't have much time to work on it, so I am opening it up to anyone that wants to work on it can. 
