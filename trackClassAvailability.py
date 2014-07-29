@@ -1,11 +1,7 @@
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import urllib
 from bs4 import BeautifulSoup
-import smtplib
+import httplib
 import sys
-import getpass
-import schedule
 
 #This loads the class information from the text file. If it can't open the ClassesToTrack.txt,
 #it will then ask for information and create it. The program will then quit. The user has to re-run
@@ -27,13 +23,7 @@ def load_class_information():
         while not (opensOrCloses.lower() == 'opens' or opensOrCloses.lower() == 'closes'):
             opensOrCloses = str(raw_input('Would you like to be notified when a section Opens or Closes (Enter opens or closes): '))
 
-        email = str(raw_input('Enter an @drexel.edu or @gmail.com email address: '))
-        while not ('@drexel.edu' in email or '@gmail.com' in email):
-            email = str(raw_input('Enter an @drexel.edu or @gmail.com email address: '))
-
-        password = getpass.getpass(prompt='Enter the password for {0}: '.format(email))
-
-        stringToWrite = url + ',' + opensOrCloses + ',' + email + ',' + password
+        stringToWrite = url + ',' + opensOrCloses
 
         if not url and not opensOrCloses:
             print('Please provide valid input or re-run the script')
@@ -56,16 +46,12 @@ def load_class_information():
         try:
             url = splitLine[0]
             avail = splitLine[1]
-            email = splitLine[2]
-            password = splitLine[3]
         except:
             print 'Error getting necessary data from ClassesToTrack.txt.'
             print 'Make sure all lines are in the correct format: url,closes,email,password or url,opens,email,password'
             sys.exit(1)
         temp.append(url)
         temp.append(avail)
-        temp.append(email)
-        temp.append(password)
         classesToTrack.append(temp)
     return classesToTrack
 
@@ -108,8 +94,6 @@ def main():
     for i in range(0, len(classes)):
         url = classes[i][0]
         closeOrOpen = classes[i][1]
-        email = classes[i][2]
-        password = classes[i][3]
         try:
             urlData = urllib.urlopen(url)
         except:
@@ -120,134 +104,30 @@ def main():
         # These variables are still in scope even though they are set in the
         # for loop
         for t in bs.findAll('td', attrs={'class': 'tableHeader'}):
-            if t.text == "CRN":
-                crn = t.findNext('td').text
             if t.text == "Subject Code":
                 subj = t.findNext('td').text
             if t.text == "Course Number":
                 courseNum = t.findNext('td').text
-            if t.text == "Section":
-                section = t.findNext('td').text
-            if t.text == "Credits":
-                creds = t.findNext('td').text
-            if t.text == "Title":
-                title = t.findNext('td').text
-            if t.text == "Instructor(s)":
-                instructor = t.findNext('td').text
-            if t.text == "Max Enroll":
-                maxEnrollNum = t.findNext('td').text
             if t.text == "Enroll":
                 curEnrollNum = t.findNext('td').text
-            if t.text == "Section Comments":
-                sectionComments = t.findNext('td').findNext('table').findNext('tr').findNext('td').text
 
         urlData.close()
 
-        if '@gmail.com' in email.lower():
+        #THIS PART OF THE SCRIPT USES INSTAPUSH!
+        #YOU NEED TO MAKE AN ACCOUNT AND PROVIDE THE NECESSARY
+        #INFO SUCH AS APP ID, APP SECRET, EVENT NAME AND TRACKER
 
-            if (curEnrollNum == 'CLOSED' and closeOrOpen == 'closes'):
+        if (curEnrollNum == 'CLOSED' and closeOrOpen == 'closes'):
+            conn = httplib.HTTPSConnection("api.instapush.im")
+            conn.request("POST", "/post", '{{"event":"EVENT_NAME","trackers":{}', {"x-instapush-appid": "App_ID", "x-instapush-appsecret": "App_Secret", "Content-Type": "application/json"})
+            conn.getresponse()
+            classesToStopTracking.append(url + ',' + closeOrOpen)
 
-                server = smtplib.SMTP('smtp.gmail.com:587')
-                server.ehlo()
-                server.starttls()
-                password = password.strip('\n\t')
-                try:
-                    server.login(email, password)
-                except:
-                    print 'Invalid login information, please check the password and email for {0}.'.format(email)
-                    break
-                subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' closed!'
-                msg = MIMEMultipart('alternative')
-                msg['Subject'] = subject
-                msg['From'] = email
-                msg['To'] = email
-                htmlList = htmlFile.readlines()
-                htmlUnfilledTable = "\n".join(htmlList)
-                html = htmlUnfilledTable.format(crn, subj, courseNum, section, creds, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
-                htmlTable = MIMEText(html, 'html')
-                msg.attach(htmlTable)
-                server.sendmail(email, email, msg.as_string())
-                server.close()
-                classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
-
-            if (curEnrollNum != 'CLOSED' and closeOrOpen == 'opens'):
-                server = smtplib.SMTP('smtp.gmail.com:587')
-                server.ehlo()
-                server.starttls()
-                password = password.strip('\n\t')
-                try:
-                    server.login(email, password)
-                except:
-                    print 'Invalid login information, please check the password and email for {0}.'.format(email)
-                    break
-                subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' opened!'
-                msg = MIMEMultipart('alternative')
-                msg['Subject'] = subject
-                msg['From'] = email
-                msg['To'] = email
-                htmlList = htmlFile.readlines()
-                htmlUnfilledTable = "\n".join(htmlList)
-                html = htmlUnfilledTable.format(crn, subj, courseNum, section, creds, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
-                htmlTable = MIMEText(html, 'html')
-                msg.attach(htmlTable)
-                server.sendmail(email, email, msg.as_string())
-                server.close()
-                classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
-
-        if '@drexel.edu' in email.lower():
-            if (curEnrollNum == 'CLOSED' and closeOrOpen == 'closes'):
-
-                server = smtplib.SMTP('smtp.mail.drexel.edu:587')
-                server.ehlo()
-                server.starttls()
-                password = password.strip('\n\t')
-                try:
-                    server.login(email, password)
-                except:
-                    print 'Invalid login information, please check the password and email for {0}.'.format(email)
-                    break
-                subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' closed!'
-
-                msg = MIMEMultipart('alternative')
-                msg['Subject'] = subject
-                msg['From'] = email
-                msg['To'] = email
-                try:
-                    htmlFile = open('email-table.html', 'r')
-                except:
-                    print 'Can\'t find email-table.html'
-                    sys.exit(1)
-                htmlList = htmlFile.readlines()
-                htmlUnfilledTable = "\n".join(htmlList)
-                html = htmlUnfilledTable.format(crn, subj, courseNum, section, creds, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
-                htmlTable = MIMEText(html, 'html')
-                msg.attach(htmlTable)
-                server.sendmail(email, email, msg.as_string())
-                server.close()
-                classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
-            if (curEnrollNum != 'CLOSED' and closeOrOpen == 'opens'):
-                server = smtplib.SMTP('smtp.mail.drexel.edu:587')
-                server.ehlo()
-                server.starttls()
-                password = password.strip('\n\t')
-                try:
-                    server.login(email, password)
-                except:
-                    print 'Invalid login information, please check the password and email for {0}.'.format(email)
-                    break
-                subject = subj + ' ' + courseNum + ' ' + 'Section: ' + section + ' opened!'
-                msg = MIMEMultipart('alternative')
-                msg['Subject'] = subject
-                msg['From'] = email
-                msg['To'] = email
-                htmlList = htmlFile.readlines()
-                htmlUnfilledTable = "\n".join(htmlList)
-                html = htmlUnfilledTable.format(crn, subj, courseNum, section, creds, title, instructor, maxEnrollNum, curEnrollNum, sectionComments)
-                htmlTable = MIMEText(html, 'html')
-                msg.attach(htmlTable)
-                server.sendmail(email, email, msg.as_string())
-                server.close()
-                classesToStopTracking.append(url + ',' + closeOrOpen + ',' + email + ',' + password + '\n')
+        if (curEnrollNum != 'CLOSED' and closeOrOpen == 'opens'):
+            conn = httplib.HTTPSConnection("api.instapush.im")
+            conn.request("POST", "/post", '{{"event":"EVENT_NAME","trackers":{}', {"x-instapush-appid": "App_ID", "x-instapush-appsecret": "App_Secret", "Content-Type": "application/json"})
+            conn.getresponse()
+            classesToStopTracking.append(url + ',' + closeOrOpen)
 
     stop_tracking_classes(classesToStopTracking)
 
