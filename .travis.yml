@@ -4,3 +4,4 @@ python:
 branches:
   only:
     - master
+install: python setup.py install
