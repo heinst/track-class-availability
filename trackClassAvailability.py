@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import smtplib
 import sys
 import getpass
-import schedule
+#import schedule
 
 #This loads the class information from the text file. If it can't open the ClassesToTrack.txt,
 #it will then ask for information and create it. The program will then quit. The user has to re-run
