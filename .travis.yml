@@ -4,4 +4,7 @@ python:
 branches:
   only:
     - master
-install: python setup.py install
+install: 
+	- "python setup.py install"
+script:
+	- python tests/trackClassAvailability-test.py.py

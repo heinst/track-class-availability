@@ -67,6 +67,7 @@ def load_class_information():
         temp.append(email)
         temp.append(password)
         classesToTrack.append(temp)
+    classes.close()
     return classesToTrack
 
 def stop_tracking_classes(classesToStopTracking):
@@ -251,7 +252,9 @@ def main():
 
     stop_tracking_classes(classesToStopTracking)
 
-main()
+if __name__ == "__main__":
+    print __name__
+    main()
 
 #The main could be run on a cron job (Linux and Mac OS X), on a Windows built in timer or on a 
 #in program timer like so:
