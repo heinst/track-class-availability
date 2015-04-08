@@ -44,42 +44,53 @@ def getWebTmsData():
             if t.text == "CRN":
                 crn = t.findNext('td').text
                 if crn != '13980':
+                    print crn
                     return False
             if t.text == "Subject Code":
                 subj = t.findNext('td').text
                 if subj != 'CS':
+                    print subj
                     return False
             if t.text == "Course Number":
                 courseNum = t.findNext('td').text
                 if courseNum != '281':
+                    print courseNum
                     return False
             if t.text == "Section":
                 section = t.findNext('td').text
                 if section != '063':
+                    print section
                     return False
             if t.text == "Credits":
                 creds = t.findNext('td').text
+                creds = creds.strip()
                 if creds != '0.00':
+                    print creds
                     return False
             if t.text == "Title":
                 title = t.findNext('td').text
                 if title != 'Systems Architecture':
+                    print title
                     return False
             if t.text == "Instructor(s)":
                 instructor = t.findNext('td').text
-                if instructor != 'Constantine Katsinis':
+                if instructor != 'Constantine  Katsinis':
+                    print instructor
                     return False
             if t.text == "Max Enroll":
                 maxEnrollNum = t.findNext('td').text
                 if maxEnrollNum != '25':
+                    print maxEnrollNum
                     return False
             if t.text == "Enroll":
                 curEnrollNum = t.findNext('td').text
                 if curEnrollNum != '21':
+                    print curEnrollNum
                     return False
             if t.text == "Section Comments":
                 sectionComments = t.findNext('td').findNext('table').findNext('tr').findNext('td').text
                 if sectionComments != 'Also register for a lecture':
+                    print sectionComments
                     return False
 
         urlData.close()
