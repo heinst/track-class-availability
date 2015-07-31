@@ -1,6 +1,8 @@
 Track Class Availability
 ========================
 
+[![Join the chat at https://gitter.im/heinst/track-class-availability](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/heinst/track-class-availability?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/heinst/track-class-availability.svg?branch=master)](https://travis-ci.org/heinst/track-class-availability)
 
 Track Class Availability (trackClassAvailability.py) is a tool written in Python (2.7) that allows a user to track numerous classes through WebTMS. The user can choose whether to be notified when a section opens or closes. Track Class Availability will then check all your classes via WebTMS every hour to see if the sections you are tracking open or close. If the classes you are tracking open or close, you will be notified of the status change via email.
